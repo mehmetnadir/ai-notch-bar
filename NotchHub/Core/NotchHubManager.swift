@@ -9,6 +9,11 @@ final class NotchHubManager: ObservableObject {
   @Published var activeProvider: AnyNotchProvider?
   /// Genişletilmiş mod aktif mi
   @Published var isExpanded: Bool = false
+  /// Aktif oturum sayısı (dinamik yükseklik hesabı için)
+  @Published var activeSessionCount: Int = 0
+
+  /// ClaudeProvider referansı (doğrudan erişim için)
+  weak var claudeProvider: ClaudeProvider?
 
   private var cancellables = Set<AnyCancellable>()
 
@@ -34,6 +39,8 @@ final class NotchHubManager: ObservableObject {
     if activeProvider?.id != newActive?.id {
       activeProvider = newActive
     }
+    // Oturum sayısını güncelle (dinamik yükseklik için)
+    activeSessionCount = claudeProvider?.sessions.count ?? 0
   }
 
   /// Tüm provider'ları başlat
@@ -67,6 +74,8 @@ final class AnyNotchProvider: ObservableObject, Identifiable {
   private let _state: () -> ProviderState
   private let _compactView: () -> AnyView
   private let _expandedView: () -> AnyView
+  private let _compactLeadingView: () -> AnyView
+  private let _compactTrailingView: () -> AnyView
   private let _onActivate: () -> Void
   private let _start: () -> Void
   private let _stop: () -> Void
@@ -81,6 +90,8 @@ final class AnyNotchProvider: ObservableObject, Identifiable {
     self._state = { provider.state }
     self._compactView = { provider.compactView() }
     self._expandedView = { provider.expandedView() }
+    self._compactLeadingView = { provider.compactLeadingView() }
+    self._compactTrailingView = { provider.compactTrailingView() }
     self._onActivate = { provider.onActivate() }
     self._start = { provider.start() }
     self._stop = { provider.stop() }
@@ -88,6 +99,8 @@ final class AnyNotchProvider: ObservableObject, Identifiable {
 
   func compactView() -> AnyView { _compactView() }
   func expandedView() -> AnyView { _expandedView() }
+  func compactLeadingView() -> AnyView { _compactLeadingView() }
+  func compactTrailingView() -> AnyView { _compactTrailingView() }
   func onActivate() { _onActivate() }
   func start() { _start() }
   func stop() { _stop() }

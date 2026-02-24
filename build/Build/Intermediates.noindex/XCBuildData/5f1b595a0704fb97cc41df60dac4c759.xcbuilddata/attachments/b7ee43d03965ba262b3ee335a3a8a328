@@ -1,0 +1,16 @@
+/Users/nadir/01dev/claude-notify/NotchHub/App/AppDelegate.swift
+/Users/nadir/01dev/claude-notify/NotchHub/App/NotchHubApp.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Audio/SoundManager.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Core/AppSettings.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Core/ConflictResolver.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Core/LockFileWatcher.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Core/NotchHubManager.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Core/NotchWindow.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Core/ScreenDetector.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Protocols/NotchProvider.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Providers/ClaudeProvider.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Views/Claude/ClaudeCompactIcons.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Views/Claude/ClaudeCompactView.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Views/Claude/ClaudeExpandedView.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Views/NotchShape.swift
+/Users/nadir/01dev/claude-notify/NotchHub/Views/NotchView.swift

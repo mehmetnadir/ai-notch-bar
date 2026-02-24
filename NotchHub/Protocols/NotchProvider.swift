@@ -35,6 +35,11 @@ protocol NotchProvider: ObservableObject {
   /// Genişletilmiş görünüm (hover/tıklama ile)
   @ViewBuilder func expandedView() -> AnyView
 
+  /// Notch solunda görünen küçük ikon (kapalı durumda)
+  @ViewBuilder func compactLeadingView() -> AnyView
+  /// Notch sağında görünen küçük ikon (kapalı durumda)
+  @ViewBuilder func compactTrailingView() -> AnyView
+
   /// Tıklama aksiyonu
   func onActivate()
   /// Provider'ı başlat

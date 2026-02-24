@@ -16,6 +16,9 @@ final class ClaudeProvider: ObservableObject, NotchProvider {
   @Published var status: ClaudeStatus = .idle
   @Published private(set) var sessions: [AISession] = []
 
+  /// Tıklama döngüsü için son aktive edilen session index'i
+  private var lastActivatedIndex: Int = -1
+
   private let watcher = LockFileWatcher()
   private let soundManager = SoundManager.shared
   private var cancellables = Set<AnyCancellable>()
@@ -48,14 +51,28 @@ final class ClaudeProvider: ObservableObject, NotchProvider {
     AnyView(ClaudeExpandedView(provider: self))
   }
 
-  /// Tıklama — aktif IDE penceresine geç
+  /// Notch solunda durum ikonu
+  func compactLeadingView() -> AnyView {
+    AnyView(ClaudeLeadingIcon(provider: self))
+  }
+
+  /// Notch sağında oturum sayısı
+  func compactTrailingView() -> AnyView {
+    AnyView(ClaudeTrailingIcon(provider: self))
+  }
+
+  /// Tıklama — tek oturum varsa onu aç, birden fazlaysa round-robin
   func onActivate() {
-    guard let session = activeSession else { return }
-    // IDE'yi aktifle (bundleId bilgisi lock dosyasında yok, ideName'den tahmin)
-    let bundleId = bundleIdForIDE(session.ideName)
-    if let app = NSRunningApplication.runningApplications(
-      withBundleIdentifier: bundleId
-    ).first {
+    guard !sessions.isEmpty else { return }
+    lastActivatedIndex = (lastActivatedIndex + 1) % sessions.count
+    activateSession(sessions[lastActivatedIndex])
+  }
+
+  /// Belirli bir oturumun IDE penceresini öne getir (PID tabanlı)
+  func activateSession(_ session: AISession) {
+    if let app = NSRunningApplication(
+      processIdentifier: pid_t(session.pid)
+    ) {
       app.activate()
     }
   }
@@ -121,26 +138,16 @@ final class ClaudeProvider: ObservableObject, NotchProvider {
     }
   }
 
+  /// Peek tetiklendiğinde çağrılacak callback
+  var onPeekRequested: (() -> Void)?
+
   /// Kullanıcı girdisi bekleniyor (CLI hook'tan çağrılır)
   func notifyWaitingInput(sessionId: String? = nil) {
     if let session = sessionId.flatMap({ id in sessions.first { $0.id == id } })
       ?? sessions.first {
       status = .waitingInput(session)
       soundManager.playNotification()
-    }
-  }
-
-  /// IDE adından bundle ID tahmin et
-  private func bundleIdForIDE(_ ideName: String) -> String {
-    switch ideName.lowercased() {
-    case "antigravity", "vscode", "vs code", "visual studio code":
-      return "com.microsoft.VSCode"
-    case "cursor":
-      return "com.todesktop.230313mzl4w4u92"
-    case "windsurf":
-      return "com.codeium.windsurf"
-    default:
-      return "com.microsoft.VSCode"
+      onPeekRequested?()
     }
   }
 }
