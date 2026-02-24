@@ -1,0 +1,22 @@
+# macOS
+.DS_Store
+
+# Swift Package Manager
+.build/
+.swiftpm/
+Packages/
+
+# Xcode (üretilmiş dosyalar)
+*.xcodeproj/
+xcuserdata/
+DerivedData/
+
+# Güvenlik — asla commit'leme
+.env
+*.key
+*.pem
+
+# Package.resolved — isteğe bağlı
+# Takım projelerinde versiyon tutarlılığı için commit'lenebilir.
+# Kişisel/tek geliştirici projelerinde genellikle ignore edilir.
+# Package.resolved
