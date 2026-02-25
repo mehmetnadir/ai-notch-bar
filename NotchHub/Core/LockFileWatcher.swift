@@ -1,6 +1,13 @@
 import Foundation
 import Combine
 
+/// Tek bir oturumun durumu
+enum SessionStatus: Equatable {
+  case working       // Çalışıyor (varsayılan — lock dosyası var = aktif)
+  case waitingInput  // Kullanıcı girdisi bekliyor (CLI hook tetikler)
+  case idle          // Boşta (oturum var ama aktif değil)
+}
+
 /// AI IDE oturumu bilgisi
 struct AISession: Identifiable, Equatable {
   let id: String          // Port numarası

@@ -12,7 +12,10 @@ let package = Package(
   targets: [
     .executableTarget(
       name: "NotchHub",
-      path: "NotchHub"
+      path: "NotchHub",
+      resources: [
+        .copy("Resources/Icons")
+      ]
     ),
     .executableTarget(
       name: "NotchHubCLI",

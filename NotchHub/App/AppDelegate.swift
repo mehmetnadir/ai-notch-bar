@@ -25,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     // Notch penceresi oluştur
     let window = NotchWindow()
     window.windowLevel = conflictResolver.recommendedWindowLevel
+    manager.notchWindow = window
     let contentView = NotchView(manager: manager)
     window.setup(with: contentView)
     self.notchWindow = window
@@ -58,6 +59,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     case "waiting-input":
       let sessionId = payload["sessionId"] as? String
       claudeProvider?.notifyWaitingInput(sessionId: sessionId)
+    case "task-started":
+      let sessionId = payload["sessionId"] as? String
+      claudeProvider?.notifyWorking(sessionId: sessionId)
+    case "task-completed":
+      let sessionId = payload["sessionId"] as? String
+      claudeProvider?.notifyIdle(sessionId: sessionId)
     default:
       break
     }

@@ -20,6 +20,10 @@ struct ClaudeLeadingIcon: View {
         Image(systemName: "exclamationmark.bubble.fill")
           .foregroundStyle(.orange)
           .symbolEffect(.pulse)
+
+      case .completed:
+        Image(systemName: "checkmark.circle.fill")
+          .foregroundStyle(.green)
       }
     }
     .font(.system(size: 11, weight: .medium))

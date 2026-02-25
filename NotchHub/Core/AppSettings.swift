@@ -19,6 +19,15 @@ final class AppSettings: ObservableObject {
   /// Ses bildirimleri aktif mi
   @AppStorage("soundEnabled") var soundEnabled: Bool = true
 
+  /// Hover gecikmesi (ms) — notch'un açılma süresi
+  @AppStorage("hoverDelay") var hoverDelay: Double = 200
+
+  /// Peek süresi (saniye) — bildirim peek'inin görünme süresi
+  @AppStorage("peekDuration") var peekDuration: Double = 4
+
+  /// Claude Code provider aktif mi
+  @AppStorage("claudeEnabled") var claudeEnabled: Bool = true
+
   /// Çerçeve rengi (SwiftUI Color)
   var borderColor: Color {
     get { Color(hex: borderColorHex) ?? .white }

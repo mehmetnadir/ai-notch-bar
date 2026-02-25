@@ -6,8 +6,13 @@ struct NotchHubCLI: ParsableCommand {
   static let configuration = CommandConfiguration(
     commandName: "notchhub",
     abstract: "AI Notch Bar — CLI bildirim aracı",
-    version: "0.1.0",
-    subcommands: [Notify.self, WaitingInput.self]
+    version: "0.2.0",
+    subcommands: [
+      Notify.self,
+      WaitingInput.self,
+      TaskStarted.self,
+      TaskCompleted.self,
+    ]
   )
 }
 
@@ -65,6 +70,54 @@ struct WaitingInput: ParsableCommand {
 
     try sendToApp(payload)
     print("Yanıt bekleniyor bildirimi gönderildi (\(tool))")
+  }
+}
+
+/// AI aracı çalışmaya başladı (kullanıcı mesaj gönderdi)
+struct TaskStarted: ParsableCommand {
+  static let configuration = CommandConfiguration(
+    commandName: "task-started",
+    abstract: "AI aracı çalışmaya başladı bildirimi"
+  )
+
+  @Option(name: .long, help: "Oturum ID (port numarası)")
+  var sessionId: String?
+
+  @Option(name: .long, help: "AI aracı adı (claude, copilot, vb.)")
+  var tool: String = "claude"
+
+  func run() throws {
+    let payload: [String: Any] = [
+      "type": "task-started",
+      "tool": tool,
+      "sessionId": sessionId as Any,
+    ]
+
+    try sendToApp(payload)
+  }
+}
+
+/// AI aracı yanıtını tamamladı
+struct TaskCompleted: ParsableCommand {
+  static let configuration = CommandConfiguration(
+    commandName: "task-completed",
+    abstract: "AI aracı yanıtını tamamladı bildirimi"
+  )
+
+  @Option(name: .long, help: "Oturum ID (port numarası)")
+  var sessionId: String?
+
+  @Option(name: .long, help: "AI aracı adı (claude, copilot, vb.)")
+  var tool: String = "claude"
+
+  func run() throws {
+    let payload: [String: Any] = [
+      "type": "task-completed",
+      "tool": tool,
+      "sessionId": sessionId as Any,
+    ]
+
+    try sendToApp(payload)
   }
 }
 

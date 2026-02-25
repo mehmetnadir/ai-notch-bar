@@ -15,6 +15,9 @@ final class NotchHubManager: ObservableObject {
   /// ClaudeProvider referansı (doğrudan erişim için)
   weak var claudeProvider: ClaudeProvider?
 
+  /// NotchWindow referansı (hit rect güncellemesi için)
+  weak var notchWindow: NotchWindow?
+
   private var cancellables = Set<AnyCancellable>()
 
   /// Aktif provider isimlerini döndür (menü bar için)
@@ -31,8 +34,17 @@ final class NotchHubManager: ObservableObject {
 
   /// En yüksek öncelikli aktif provider'ı seç
   func resolveActiveProvider() {
+    let settings = AppSettings.shared
+
     let sorted = providers
-      .filter { $0.state != .inactive }
+      .filter { provider in
+        guard provider.state != .inactive else { return false }
+        // Provider enable/disable kontrolü
+        if provider.id == "claude-code" && !settings.claudeEnabled {
+          return false
+        }
+        return true
+      }
       .sorted { $0.priority.rawValue > $1.priority.rawValue }
 
     let newActive = sorted.first

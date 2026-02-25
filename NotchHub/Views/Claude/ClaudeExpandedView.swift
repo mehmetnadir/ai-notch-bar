@@ -1,32 +1,32 @@
 import SwiftUI
 
-/// Claude Code genişletilmiş görünüm — grid layout, bireysel tıklama
+/// Claude Code genişletilmiş görünüm — 3 sütunlu grid, marka ikonlu tile'lar
 struct ClaudeExpandedView: View {
   @ObservedObject var provider: ClaudeProvider
 
-  /// Proje adına göre ikon seçimi (deterministik)
-  private static let projectIcons = [
-    "folder.fill", "doc.text.fill", "terminal.fill",
-    "hammer.fill", "wrench.and.screwdriver.fill",
-    "cpu.fill", "server.rack", "externaldrive.fill",
-    "network", "globe", "bolt.fill", "leaf.fill",
-  ]
+  /// Bu provider'ın markası
+  private let providerBrand: AIBrand = .claude
 
-  private func iconFor(session: AISession) -> String {
-    let hash = abs(session.projectName.hashValue)
-    return Self.projectIcons[hash % Self.projectIcons.count]
+  /// Oturum durumuna göre renk döndür
+  private func colorFor(session: AISession) -> Color {
+    switch provider.statusFor(session: session) {
+    case .working: return .green
+    case .waitingInput: return .red
+    case .idle: return .gray
+    }
   }
 
-  /// Grid sütun tanımı — 2 sütunlu
+  /// Grid sütun tanımı — 2 sütunlu (yatay tile ile daha iyi okunur)
   private let columns = [
-    GridItem(.flexible(), spacing: 8),
-    GridItem(.flexible(), spacing: 8),
+    GridItem(.flexible(), spacing: 6),
+    GridItem(.flexible(), spacing: 6),
   ]
 
   var body: some View {
     VStack(spacing: 6) {
-      // Üst satır: durum badge
-      HStack {
+      // Üst satır: marka ikonu + durum badge
+      HStack(spacing: 6) {
+        BrandIcon(brand: providerBrand, size: 14)
         statusBadge
         Spacer()
         Text("\(provider.sessions.count) oturum")
@@ -38,12 +38,14 @@ struct ClaudeExpandedView: View {
         Divider()
           .background(.white.opacity(0.1))
 
-        // Grid — her oturum bir kart
+        // Grid — 3 sütunlu, her oturum renkli kart
         LazyVGrid(columns: columns, spacing: 6) {
           ForEach(provider.sessions, id: \.id) { session in
             SessionTile(
               session: session,
-              icon: iconFor(session: session),
+              brand: providerBrand,
+              accentColor: colorFor(session: session),
+              sessionStatus: provider.statusFor(session: session),
               isActive: provider.activeSession?.id == session.id
             )
             .onTapGesture {
@@ -54,9 +56,7 @@ struct ClaudeExpandedView: View {
       } else if let session = provider.activeSession {
         // Tek oturum — basit görünüm
         HStack(spacing: 8) {
-          Image(systemName: iconFor(session: session))
-            .font(.system(size: 14))
-            .foregroundStyle(.cyan)
+          BrandIcon(brand: providerBrand, size: 14)
           VStack(alignment: .leading, spacing: 2) {
             Text(session.projectName)
               .font(.system(size: 11, weight: .semibold))
@@ -96,8 +96,9 @@ struct ClaudeExpandedView: View {
   private var statusColor: Color {
     switch provider.status {
     case .idle: return .gray
-    case .working: return .cyan
-    case .waitingInput: return .orange
+    case .working: return .green
+    case .waitingInput: return .red
+    case .completed: return .cyan
     }
   }
 
@@ -106,54 +107,72 @@ struct ClaudeExpandedView: View {
     case .idle: return "Hazır"
     case .working: return "Çalışıyor"
     case .waitingInput: return "Yanıt Bekliyor"
+    case .completed: return "Tamamlandı"
     }
   }
 }
 
 // MARK: - Session Tile
 
-/// Grid içindeki tek oturum kartı
+/// Grid içindeki tek oturum kartı — duruma göre renkli arka plan
 private struct SessionTile: View {
   let session: AISession
-  let icon: String
+  let brand: AIBrand
+  let accentColor: Color
+  let sessionStatus: SessionStatus
   let isActive: Bool
 
   @State private var isHovering = false
 
   var body: some View {
-    HStack(spacing: 6) {
-      Image(systemName: icon)
-        .font(.system(size: 11))
-        .foregroundStyle(isActive ? .cyan : .white.opacity(0.6))
-        .frame(width: 16)
+    HStack(spacing: 5) {
+      // Sol: provider marka ikonu
+      BrandIcon(brand: brand, size: 12)
 
-      VStack(alignment: .leading, spacing: 1) {
-        Text(session.projectName)
-          .font(.system(size: 10, weight: .medium))
-          .foregroundStyle(.white.opacity(0.9))
-          .lineLimit(1)
-
-        Text(session.ideName)
-          .font(.system(size: 8))
-          .foregroundStyle(.white.opacity(0.35))
-          .lineLimit(1)
-      }
+      // Proje adı — truncation ile
+      Text(session.projectName)
+        .font(.system(size: 9, weight: .medium))
+        .foregroundStyle(.white.opacity(0.9))
+        .lineLimit(1)
+        .truncationMode(.tail)
 
       Spacer(minLength: 0)
 
-      Circle()
-        .fill(session.isAlive ? .green : .red)
-        .frame(width: 5, height: 5)
+      // Durum göstergesi — küçük dot + kısa etiket
+      HStack(spacing: 3) {
+        Circle()
+          .fill(accentColor)
+          .frame(width: 5, height: 5)
+        Text(statusLabel)
+          .font(.system(size: 7, weight: .medium))
+          .foregroundStyle(accentColor.opacity(0.8))
+      }
     }
-    .padding(.horizontal, 8)
+    .frame(maxWidth: .infinity)
     .padding(.vertical, 5)
+    .padding(.horizontal, 6)
     .background(
-      RoundedRectangle(cornerRadius: 6, style: .continuous)
-        .fill(.white.opacity(isHovering ? 0.1 : 0.05))
+      RoundedRectangle(cornerRadius: 8, style: .continuous)
+        .fill(accentColor.opacity(isHovering ? 0.25 : 0.15))
+        .overlay(
+          RoundedRectangle(cornerRadius: 8, style: .continuous)
+            .strokeBorder(
+              accentColor.opacity(isActive ? 0.6 : 0.25),
+              lineWidth: 1
+            )
+        )
     )
     .contentShape(Rectangle())
     .onHover { hovering in
       isHovering = hovering
+    }
+  }
+
+  private var statusLabel: String {
+    switch sessionStatus {
+    case .working: return "aktif"
+    case .waitingInput: return "bekliyor"
+    case .idle: return "boşta"
     }
   }
 }

@@ -6,6 +6,9 @@
 .swiftpm/
 Packages/
 
+# Build çıktıları
+build/
+
 # Xcode (üretilmiş dosyalar)
 *.xcodeproj/
 xcuserdata/
