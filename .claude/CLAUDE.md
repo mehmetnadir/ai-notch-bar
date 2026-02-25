@@ -75,7 +75,47 @@ acceptsMouseMovedEvents             → Mouse etkileşimi çalışır
 ```
 Bu üçünden biri eksik olursa notch ÇALIŞMAZ. Üçü birlikte tek çözümdür.
 
+## Geliştirme Yol Haritası
+
+### Görsel & Animasyon
+- [ ] Notch şekilli mask (boring.notch tarzı gerçek notch silüeti)
+- [ ] Spring animasyonları (açılma/kapanma geçişleri)
+- [ ] Durum geçiş animasyonları (working → waitingInput renk geçişi)
+- [ ] Glassmorphism/blur efektleri (vibrancy material)
+- [ ] Progress bar (token kullanımı veya görev ilerlemesi)
+
+### Yeni Provider'lar
+- [ ] GitHub Copilot entegrasyonu
+- [ ] Cursor AI entegrasyonu
+- [ ] Windsurf/Codeium entegrasyonu
+- [ ] Genel MCP sunucu izleme
+
+### UX İyileştirmeleri
+- [ ] Sürükle-bırak ile notch konumlandırma
+- [ ] Klavye kısayolları (⌘+Shift+N ile toggle)
+- [ ] Çoklu ekran desteği (her ekranda ayrı notch)
+- [ ] Sağ tık bağlam menüsü (oturumu kapat, yeniden başlat)
+- [ ] Oturum geçmişi (son 10 oturum log'u)
+
+### Bildirim Sistemi
+- [ ] macOS native bildirim entegrasyonu (UNUserNotificationCenter)
+- [ ] Bildirim gruplama (aynı proje bildirimleri birleştir)
+- [ ] Rahatsız etme modu (DND saatlerinde sessiz)
+- [ ] Özelleştirilebilir ses temaları
+
+### Sistem Entegrasyonları
+- [ ] Menü bar ikonu (notch olmayan Mac'ler için fallback)
+- [ ] Login item (açılışta otomatik başlat)
+- [ ] Spotlight entegrasyonu (oturum arama)
+- [ ] AppleScript/Shortcuts desteği
+
+### Performans
+- [ ] Metal hızlandırmalı render (karmaşık animasyonlar için)
+- [ ] Batarya dostu mod (animasyonları azalt)
+- [ ] Bellek optimizasyonu (uzun süreli çalışma)
+
 ## Changelog
 
+- 2026-02-25: Ayarlar ekranı, click-through fix, .completed durum bildirimi, peek tetikleme.
 - 2026-02-24: Proje başlatıldı. Faz 1 temel altyapı oluşturuldu.
 - 2026-02-24: constrainFrameRect + SafeAreaFreeHostingView + mouse tracking fix.
