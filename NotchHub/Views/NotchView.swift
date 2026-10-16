@@ -1,5 +1,20 @@
 import SwiftUI
 import Combine
+import ObjectiveC
+
+/// NSMenuItem action helper — closure'ı @objc selector olarak çalıştırır
+final class MenuAction: NSObject {
+  static var associatedKey: UInt8 = 0
+  private let handler: () -> Void
+
+  init(_ handler: @escaping () -> Void) {
+    self.handler = handler
+  }
+
+  @objc func invoke() {
+    handler()
+  }
+}
 
 /// Notch durumları — boring.notch tarzı + bildirim peek
 enum NotchState: Equatable {
@@ -20,6 +35,7 @@ struct NotchView: View {
   @State private var resizeTask: Task<Void, Never>?
   @State private var globalMonitor: Any?
   @State private var localMonitor: Any?
+  @State private var rightClickMonitor: Any?
 
   private let screenDetector = ScreenDetector.shared
 
@@ -113,6 +129,7 @@ struct NotchView: View {
     .onAppear {
       setupPeekCallback()
       setupMouseMonitor()
+      setupRightClickMenu()
       updateClickThrough()
     }
     .onDisappear {
@@ -343,6 +360,18 @@ struct NotchView: View {
       checkMousePosition()
       return event
     }
+    // Global sağ tık — kapalı durumdayken de notch alanında menü aç
+    rightClickMonitor = NSEvent.addGlobalMonitorForEvents(
+      matching: [.rightMouseDown]
+    ) { [self] _ in
+      let mouseLocation = NSEvent.mouseLocation
+      if notchHitRect.contains(mouseLocation) {
+        showContextMenu(
+          at: mouseLocation,
+          isScreenCoordinates: true
+        )
+      }
+    }
   }
 
   private func removeMouseMonitor() {
@@ -353,6 +382,10 @@ struct NotchView: View {
     if let monitor = localMonitor {
       NSEvent.removeMonitor(monitor)
       localMonitor = nil
+    }
+    if let monitor = rightClickMonitor {
+      NSEvent.removeMonitor(monitor)
+      rightClickMonitor = nil
     }
   }
 
@@ -419,6 +452,64 @@ struct NotchView: View {
           notchState = .closed
         }
       }
+    }
+  }
+
+  // MARK: - Sağ Tık Menüsü
+
+  private func setupRightClickMenu() {
+    manager.notchWindow?.onRightClick = { [self] location in
+      showContextMenu(at: location, isScreenCoordinates: false)
+    }
+  }
+
+  private func showContextMenu(
+    at location: NSPoint,
+    isScreenCoordinates: Bool = false
+  ) {
+    let menu = NSMenu()
+
+    let settingsAction = MenuAction {
+      Task { @MainActor in
+        self.showSettings = true
+        if self.notchState != .open {
+          self.notchState = .open
+        }
+      }
+    }
+    // MenuAction nesnesini retain et (menu yaşadığı sürece)
+    objc_setAssociatedObject(
+      menu, &MenuAction.associatedKey, settingsAction,
+      .OBJC_ASSOCIATION_RETAIN_NONATOMIC
+    )
+
+    let settingsItem = NSMenuItem(
+      title: "Ayarlar",
+      action: #selector(MenuAction.invoke),
+      keyEquivalent: ","
+    )
+    settingsItem.target = settingsAction
+
+    let quitItem = NSMenuItem(
+      title: "Çıkış",
+      action: #selector(NSApplication.terminate(_:)),
+      keyEquivalent: "q"
+    )
+    quitItem.target = NSApp
+
+    menu.addItem(settingsItem)
+    menu.addItem(.separator())
+    menu.addItem(quitItem)
+
+    if isScreenCoordinates {
+      // Global monitor'dan gelen ekran koordinatı —
+      // menüyü mouse pozisyonunda aç
+      manager.notchWindow?.showMenuAtScreenLocation(
+        menu, screenPoint: location
+      )
+    } else {
+      // Panel'den gelen pencere koordinatı
+      manager.notchWindow?.showMenu(menu, at: location)
     }
   }
 

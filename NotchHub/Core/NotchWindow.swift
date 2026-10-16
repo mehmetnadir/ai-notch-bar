@@ -88,6 +88,9 @@ final class SafeAreaFreeHostingView<Content: View>: NSHostingView<Content> {
 /// (safeAreaInsets.top) pencere yerleştirmeyi engeller. Override ile
 /// istenen frame'i olduğu gibi döndürüyoruz.
 final class NotchPanel: NSPanel {
+  /// Sağ tık menüsü callback'i — NotchView tarafından atanır
+  var onRightClick: ((_ location: NSPoint) -> Void)?
+
   override func constrainFrameRect(
     _ frameRect: NSRect, to screen: NSScreen?
   ) -> NSRect {
@@ -101,6 +104,19 @@ final class NotchPanel: NSPanel {
   override func mouseDown(with event: NSEvent) {
     makeKey()
     super.mouseDown(with: event)
+  }
+
+  /// Sağ tık — context menü göster
+  override func rightMouseDown(with event: NSEvent) {
+    onRightClick?(event.locationInWindow)
+  }
+}
+
+// MARK: - FirstMouseView (Wrapper)
+/// Wrapper NSView — ilk tıklamayı SwiftUI'ye iletir
+final class FirstMouseView: NSView {
+  override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
+    return true
   }
 }
 
@@ -193,7 +209,7 @@ final class NotchWindow {
     newHostingView.autoresizingMask = []
 
     // Wrapper view — panel küçüldüğünde hosting view'ı klipler
-    let wrapper = NSView(
+    let wrapper = FirstMouseView(
       frame: NSRect(
         x: 0, y: 0, width: panelWidth, height: panelHeight
       )
@@ -227,6 +243,12 @@ final class NotchWindow {
   var acceptsClicks: Bool {
     get { !(panel?.ignoresMouseEvents ?? true) }
     set { panel?.ignoresMouseEvents = !newValue }
+  }
+
+  /// Sağ tık callback'i — NotchView'den atanır
+  var onRightClick: ((_ location: NSPoint) -> Void)? {
+    get { (panel as? NotchPanel)?.onRightClick }
+    set { (panel as? NotchPanel)?.onRightClick = newValue }
   }
 
   /// Panel frame'ini duruma göre güncelle.
@@ -272,6 +294,25 @@ final class NotchWindow {
       width: fullWidth,
       height: fullHeight
     )
+  }
+
+  /// Verilen NSMenu'yü panel üzerinde göster (pencere koordinatları)
+  func showMenu(_ menu: NSMenu, at location: NSPoint) {
+    guard let contentView = panel?.contentView else { return }
+    menu.popUp(positioning: nil, at: location, in: contentView)
+  }
+
+  /// Menüyü ekran koordinatlarında göster (global monitor için)
+  func showMenuAtScreenLocation(
+    _ menu: NSMenu, screenPoint: NSPoint
+  ) {
+    guard let panel = panel,
+          let contentView = panel.contentView else { return }
+    // Ekran → pencere koordinat dönüşümü
+    let windowPoint = panel.convertPoint(fromScreen: screenPoint)
+    // Pencere → view koordinat dönüşümü
+    let viewPoint = contentView.convert(windowPoint, from: nil)
+    menu.popUp(positioning: nil, at: viewPoint, in: contentView)
   }
 
   /// Pencereyi gizle
